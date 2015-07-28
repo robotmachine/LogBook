@@ -49,18 +49,33 @@ def main():
 
 	ProjectPrev = ReadConfig('project','name')
 	if ProjectPrev is not None:
-		ProjQuery = BoolTool('Are you still working on '+str(ProjectPrev)+'?')
+		ProjQuery = BoolTool('Are you still working on '+ProjectPrev+'? Y/n')
 		if ProjQuery is False:
-			QueryTool('What project are you working on?')
+			FinishQuery = BoolTool('Did you finish '+ProjectPrev+'? Y/n')
+			if FinishQuery is False:
+				PrevProjBool = "Abandoned"
+				PrevProjStat = QueryTool('Why did you stop working on '+ProjectPrev+'?')
+			else:
+				PrevProjBool = "Completed"
+				PrevProjStat = QueryTool('How did '+ProjectPrev+' turn out?')
+			ProjectEntry = QueryTool('What project are you working on now?')
 		else:
 			ProjectEntry = ProjectPrev
+			ProjectPrev = None
 	else:
 		ProjectEntry = QueryTool('What project are you working on?')
+	ProjectStatus = QueryTool('How are things going with '+ProjectEntry+'?')
+	
 	WriteConfig('project','name',ProjectEntry)
 	
 	JournalEntry = QueryTool('What should the journal say?')
 
-	JournalPrint(JournalFile,ProjectEntry+'\n'+JournalEntry)
+	if ProjectPrev is not None:
+		WriteThis = str('Previous Project: '+ProjectPrev+'\nStatus: '+PrevProjBool+'\nNotes: '+PrevProjStat+'\nCurrent Project :'+ProjectEntry+'\nProject Status: '+ProjectStatus+'\nJournal: '+JournalEntry)
+		JournalPrint(JournalFile,WriteThis)
+	else:
+		WriteThis = str('Current Project: '+ProjectEntry+'\Project Status: '+ProjectStatus+'\nJournal: '+JournalEntry)
+		JournalPrint(JournalFile,WriteThis)
 	
 	quit()	
 
@@ -73,7 +88,7 @@ def ReadConfig(key,val):
 		result = config[key][val]
 	except:
 		result = None
-	return result
+	return str(result)
 
 def WriteConfig(key,val,entry):
 	config [key] = {val: entry}
