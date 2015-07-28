@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Logbook
+LogBook (lb)
 """
-import os, sys, textwrap, configparser, datetime, argparse
+import os, configparser, datetime, argparse, time, distutils.util
 
 global ConfigFile
 DefaultPath = os.path.expanduser("~/.lbrc")
 if os.path.exists(DefaultPath):
 	ConfigFile = DefaultPath
+else:
+	ConfigFile = None
 global config
 config = configparser.ConfigParser()
 
@@ -21,41 +23,118 @@ def main():
 		help='Specify an alternate config file.')
 	args = parser.parse_args()
 	
-	JournalDir = args.ArgDir
 
 	global ConfigFile
 	if args.ArgConfig:
 		ConfigFile = args.ArgConfig
 	
+	global JournalDir
+	JournalDir = args.ArgDir
 	if JournalDir is None:
 		JournalDir = ReadConfig('journal','JournalDir')
+	if '~' in JournalDir:
+		JournalDir = os.path.expanduser(JournalDir)
+	if JournalDir is None:
+		QueryTool("Enter path for your Journal directory:\n")
 	
-	print(JournalDir)
-	print(ConfigFile)
+	ThisYear = datetime.date.today().strftime('%Y')
+	MonthName = datetime.date.today().strftime('%B')
+	DayOfWeek = datetime.date.today().strftime('%A')
+	FileDate = datetime.date.today().strftime('%Y-%m-%d')
+	MakeDir(JournalDir+'/',ThisYear)
+	MakeDir(JournalDir+'/'+ThisYear+'/',MonthName)
 
-	print("It didn't fail.")
+	JournalPath = JournalDir+'/'+ThisYear+'/'+MonthName+'/'+FileDate
+	JournalFile = FileFind(JournalPath, None)
+
+	ProjectPrev = ReadConfig('project','name')
+	if ProjectPrev is not None:
+		ProjQuery = BoolTool('Are you still working on '+str(ProjectPrev)+'?')
+		if ProjQuery is False:
+			QueryTool('What project are you working on?')
+		else:
+			ProjectEntry = ProjectPrev
+	else:
+		ProjectEntry = QueryTool('What project are you working on?')
+	WriteConfig('project','name',ProjectEntry)
+	
+	JournalEntry = QueryTool('What should the journal say?')
+
+	JournalPrint(JournalFile,ProjectEntry+'\n'+JournalEntry)
+	
 	quit()	
 
 def ReadConfig(key,val):
 	if ConfigFile is None:
 		print("No config file is selected.")
+		result = None
 	try:
 		config.read(ConfigFile)
 		result = config[key][val]
-		return result
 	except:
-		print("Error reading config file.")
+		result = None
+	return result
 
-def user_exit():
+def WriteConfig(key,val,entry):
+	config [key] = {val: entry}
+	try:
+		with open(ConfigFile, 'w') as ConfigWrite:
+			config.write(ConfigWrite)
+	except PermissionError:
+		print('\nPERMISSION ERROR:\nCannot write to '+ConfigFile)
+		quit()
+	except:
+		print('\nUNKNOWN ERROR:\nSomething went wrong writing to '+ConfigFile)
+		quit()
+
+def MakeDir(base,dirname):
+	try:
+		os.stat(base+dirname)
+	except:
+		os.mkdir(base+dirname)
+
+def FileFind(JournalPath,Counter):
+	if Counter is None:
+		Counter = 1
+	JournalFile = JournalPath+'-LogBook.txt'
+	while os.path.exists(JournalFile) is True:
+		Counter = Counter + 1
+		JournalFile = JournalPath+'-LogBook-'+str(Counter)+'.txt'
+	return JournalFile
+
+def JournalPrint(JournalFile,JournalEntry):
+	try:
+		with open(JournalFile, "a") as JournalWrite:
+			JournalWrite.write(JournalEntry)
+			print('\n\n\nWrote:\n'+JournalEntry+'\n\nTo file: '+JournalFile)
+	except PermissionError:
+		print("\nPERMISSION ERROR:\nCannot write to "+JournalFile)
+		quit()
+	except FileNotFoundError:
+		print("\nFILE NOT FOUND:\n"+JournalFile)
+	except:
+		print("\nUNKNOWN ERROR:\nSomething went wrong writing to "+JournalFile)
+		quit()
+
+def UserExit():
 	print("\nUser exited.")
 	quit()
 
-def query_tool(query):
+def BoolTool(query):
+	bquery = QueryTool(query)
 	try:
-		result = input(query)
+		result = bool(distutils.util.strtobool(bquery))
 		return result
-	except KeynoardInterrupt:
-		user_exit()
+	except:
+		result = False
+		return result
+
+def QueryTool(query):
+	try:
+		result = input(query+'\n')
+		return result
+	except KeyboardInterrupt:
+		UserExit()
 	except:
 		print("\nSyntax error.")
 		quit()
