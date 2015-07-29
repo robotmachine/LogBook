@@ -2,7 +2,7 @@
 ### Project focused journal utility
 
 #### Install
-1. Download [the archive](https://github.com/robotmachine/lb/tarball/master)
+1. Download [the archive](https://github.com/robotmachine/LogBook/tarball/master)
 1. Run `chmod +x lb`
 3. Move `lb` to `/usr/local/bin/` or somewhere else in `$PATH`
 
