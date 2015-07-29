@@ -8,11 +8,14 @@
 |_____\___/ \__, |____/ \___/ \___/|_|\_\
             |___/
 
-	version 1.0
+v.1.0
 
+Project Homepage:	https://robotmachine.github.io/LogBook
+Project Source:		https://github.com/robotmachine/LogBook
+
+LogBook
 Project focused journal entry utility.
-Copyright (C) 2015 Brian A. Carter (robotmachine@gmail.com)
-https://robotmachine.github.io/lb
+(C) 2015 Brian A. Carter (robotmachine@gmail.com)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,8 +30,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
-
 import os, configparser, datetime, argparse, time, distutils.util
+
+global lbVer
+lbVer = str("1.0")
 
 global ConfigFile
 DefaultPath = os.path.expanduser("~/.lbrc")
@@ -47,8 +52,14 @@ def main():
 	parser.add_argument('--config',
 		action='store', dest='ArgConfig', default=None,
 		help='Specify an alternate config file.')
+	parser.add_argument('-v', '--version',
+		action='store_true', dest='ArgVer', default=False,
+		help='Print version.')
 	args = parser.parse_args()
 	
+
+	if args.ArgVer is True:
+		PrintVersion()
 
 	global ConfigFile
 	if args.ArgConfig:
@@ -179,5 +190,9 @@ def QueryTool(query):
 	except:
 		print("\nSyntax error.")
 		quit()
+
+def PrintVersion():
+	print("\nLogBook v."+str(lbVer)+"\n\n(C)2015 Brian A. Carter\nrobotmachine@gmail.com\nhttps://robotmachine.github.io/LogBook")
+	quit()
 
 main()
